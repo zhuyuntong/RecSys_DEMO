@@ -1,7 +1,8 @@
+# DEMO
+
+Regressive hybrid Recommendation Model: An offline, scalable, supervised recommendation model for user-to-business ratings 
 <img width="404" alt="image" src="https://github.com/zhuyuntong/Rating-Predictive-Hybrid-Recommendation-Model/assets/45145164/f258eed9-6a19-4ca3-a266-615bc70432ae">
 
-# DEMO
-Regressive hybrid Recommendation Model: An offline, scalable, supervised recommendation model for user-to-business ratings 
 
 Mainly SparkRDD implemented. Pandas DF as feature combination and as Model input.
 
