@@ -41,7 +41,9 @@ This script implements ALS (Alternating Least Squares) for matrix factorization 
 2. **Logarithmic Transformation**:
    - The `log_transform_interaction` function standardizes the interaction counts to a rating scale of 1 to 5.
    - The transformation is applied using the formula:
-     $$ \text{normalized score} = 1 + 4 \times \frac{\log(\text{interaction count} + 1) - \log(2)}{\log(285) - \log(2)} $$
+
+     <img width="756" alt="image" src="https://github.com/zhuyuntong/Rating-Predictive-Hybrid-Recommendation-Model/assets/45145164/b276d652-dd5b-403e-9659-9a401e7975e1">
+
 
 ### better_features.py Description
 
@@ -55,11 +57,12 @@ This script enhances feature extraction by integrating category information into
 
 2. **Inverse Logarithmic Transformation**:
    - The `inverse_log_transform` function converts normalized scores back to original affinity scores.
-   - The reverse transformation uses the formula:
-     $$ \text{original score} = \exp\left(\frac{\text{normalized score} - 1}{4} \times (\log(1 + 284) - \log(1 + 1)) + \log(1 + 1)\right) - 1 $$
-     > The reverse transformation formula is explained as follows: The original score is calculated by taking the exponential of the normalized score minus one, divided by four, times the difference between the natural logarithm of 285 and two, plus the natural logarithm of two, and then subtract one from the result.
+   - With a `reverse transformation` in **better_features.py** to enhance XGBRegressor's sensitivity;
+   - Both Functions are as following:
 
+      <img width="741" alt="image" src="https://github.com/zhuyuntong/Rating-Predictive-Hybrid-Recommendation-Model/assets/45145164/22bbeb15-dfff-4878-8218-b131515ab921">
 
+     
 ### Score Scaling Adjustment
 
 To enhance model sensitivity and adjust the scoring scale for specific applications, scores are magnified post-transformation. For instance:
