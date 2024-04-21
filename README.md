@@ -1,8 +1,16 @@
 # DEMO
 Regressive hybrid Recommendation Model: An offline, scalable, supervised recommendation model for user-to-business ratings 
 
+Mainly SparkRDD implemented. Pandas DF as feature combination and as Model input.
+
 <img width="1728" alt="image" src="https://github.com/zhuyuntong/Rating-Predictive-Hybrid-Recommendation-Model/assets/45145164/53dd222f-89a4-425c-b2bc-27f2395efd8f">
 
+## Table of Contents
+- [Model Taxonomy](#model-taxonomy)
+- [Matrix Factorization](#1-matrix-factorization-with-als-and-leveraging-block-matrix-calculation-using-rdd)
+- [Using KMeans for User-Business Clustering](#using-kmeans-for-user-business-clustering)
+- [Scaling](#2-scaling)
+- [Usage](#usage)
 
 # Model Taxonomy
 Hybrid: Supervised learning to combine both approaches:
@@ -16,7 +24,7 @@ Terms:
 - Fine-Tunig: Bayesian Optimization Search
 - Evaluation Metric: RMSE
 
-# Matrix Factorization with ALS and leveraging Block Matrix Calculation using RDD
+# 1. Matrix Factorization with ALS and leveraging Block Matrix Calculation using RDD
 - Implicit Interaction Matrix (tip.json: short reviews)
 ![image](https://github.com/zhuyuntong/DEMO/assets/45145164/8ccb6958-9f1b-4c70-ba86-6fec27d7d36d)
 
@@ -60,7 +68,7 @@ To enhance model sensitivity and adjust the scoring scale for specific applicati
 score = float(50 * inverse_log_transform(x[1][1])) if x[1][1] else 0
 ```
 
-# Scaling
+# 2. Scaling
 ![image](https://github.com/zhuyuntong/DEMO/assets/45145164/ed536903-c224-47d7-bc12-899eb20c32f8)
 
 ## Using KMeans for User-Business Clustering
