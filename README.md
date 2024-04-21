@@ -1,7 +1,7 @@
 # DEMO
 Regressive hybrid Recommendation Model: An offline, scalable, supervised recommendation model for user-to-business ratings 
 
-![image](https://github.com/zhuyuntong/DEMO/assets/45145164/d9716309-ba7f-4fb2-bdd8-ce530df1354d)
+<img width="1728" alt="image" src="https://github.com/zhuyuntong/Rating-Predictive-Hybrid-Recommendation-Model/assets/45145164/53dd222f-89a4-425c-b2bc-27f2395efd8f">
 
 
 # Model Taxonomy
