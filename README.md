@@ -10,9 +10,11 @@ Hybrid: Supervised learning to combine both approaches:
 - Collaborative
 
 Terms:
-- Models: ALS Matrix Factorization approach, K-means, XGBRegressor
+- Models: ALS Matrix Factorization approach, K-means, XGBRegressor, (Graph Node2Vec, Universal Sentence Encoder)
 - Packages/framework: SparkRDD, spark.ml, (gensim, spacy, tensorflow, ... )
 - Scaling
+- Bayes Optimization Search
+- Evaluation Metric: RMSE
 
 # Matrix Factorization using ALS and leveraging Block Matrix Calculation using RDD
 ![image](https://github.com/zhuyuntong/DEMO/assets/45145164/8ccb6958-9f1b-4c70-ba86-6fec27d7d36d)
