@@ -8,8 +8,8 @@ Mainly SparkRDD implemented. Pandas DF as feature combination and as Model input
 ## Table of Contents
 - [Model Taxonomy](#model-taxonomy)
 - [Matrix Factorization](#1-matrix-factorization-with-als-and-leveraging-block-matrix-calculation-using-rdd)
-- [Using KMeans for User-Business Clustering](#using-kmeans-for-user-business-clustering)
 - [Scaling](#2-scaling)
+   - [Using KMeans for User-Business Clustering](#using-kmeans-for-user-business-clustering)
 - [Usage](#usage)
 
 # Model Taxonomy
