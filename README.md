@@ -124,6 +124,10 @@ cluster_city_means = city_matrix.groupby('Cluster')[all_cities].mean()
 ```
 
 # Usage:
+- **better_XGB.py** is the exact script for running everything and output a prediction.csv, in which **KMeans_user_cluster.py** further process features from **better_features.py** in **better_XGB.py**, preparing for Model Training and Evaluation.
+- **better_features.py** is a Class for User-Business Interaction Data ETL and provides a interface for train and test data,
+- **utils.py** and **KMeans_user_cluster.py** are encapsulated and served as functions. 
+  
 Deploy on your local Env using the **Dockerfile** provided. 
 
 My workstation is M3 Chip Macbook, you may want to uncomment the 1st line in Dockerfile for building upon AMD-based architecture.
