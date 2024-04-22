@@ -1,4 +1,4 @@
-# DEMO
+# Personal Project DEMO
 
 Regressive hybrid Recommendation Model: An offline, scalable, supervised recommendation model for user-to-business ratings 
 
