@@ -1,0 +1,20 @@
+# Exclude Visual Studio Code history
+.history/
+
+# Exclude node modules
+node_modules/
+
+# Exclude build output directory
+dist/
+
+# Exclude Python bytecode
+__pycache__/
+*.pyc
+
+# Exclude log files and databases
+*.log
+*.sql
+*.sqlite
+
+# Exclude environment variables
+.env
