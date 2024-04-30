@@ -19,6 +19,11 @@ __pycache__/
 # Exclude environment variables
 .env
 .DS_Store
+.ipynb_checkpoints
+prd/.DS_Store
+prd/.ipynb_checkpoints
+prd/catboost_info
+prd/archived
 
 # Exclude Data
 data/
