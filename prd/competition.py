@@ -52,11 +52,35 @@ def initialize_spark_context():
     return sc
 
 
+sc = initialize_spark_context()
+
+
 def rdd_to_pandas(rdd):
     return pd.DataFrame(rdd.collect(), columns=rdd.first().keys())
 
 
-sc = initialize_spark_context()
+# simplicity purpose
+def process_json_files(data_folder_path, sc):
+    user_rdd = sc.textFile(data_folder_path + '/user.json').map(transform_user_data)
+    user_parsed_df = rdd_to_pandas(user_rdd)
+    user_rdd.unpersist()
+
+    business_rdd = sc.textFile(data_folder_path + '/business.json').map(transform_business_data)
+    business_parsed_df = rdd_to_pandas(business_rdd)
+    business_rdd.unpersist()
+
+    review_rdd = read_json_data(data_folder_path + '/review_train.json', extract_review_data, sc)
+    review_parsed_df = rdd_to_pandas(review_rdd)
+    review_rdd.unpersist()
+
+    return user_parsed_df, business_parsed_df, review_parsed_df
+
+
+# simplicity purpose
+def process_features(data_file_path, feature_processor, user_clusters):
+    df = feature_processor.process_all_features(sc, pd.read_csv(data_file_path), data_file_path)
+    df = df.merge(user_clusters, on='user_id', how='left')
+    return df
 
 
 def main(args):
@@ -70,22 +94,13 @@ def main(args):
     print(f"Parsed argv1: {data_folder_path}, argv2: {test_data_file}, argv3: {output_file}\n")
 
     # FIXME
-    user_rdd = sc.textFile(data_folder_path + '/user.json').map(transform_user_data)
-    user_parsed_df = rdd_to_pandas(user_rdd)
-    user_rdd.unpersist()
-    business_rdd = sc.textFile(data_folder_path + '/business.json').map(transform_business_data)
-    business_parsed_df = rdd_to_pandas(business_rdd)
-    business_rdd.unpersist()
-    review_rdd = read_json_data(data_folder_path + '/review_train.json', extract_review_data, sc)
-    review_parsed_df = rdd_to_pandas(review_rdd)
-    review_rdd.unpersist()
-    # print(review_parsed_df)
+    # user_parsed_df, business_parsed_df, review_parsed_df = process_json_files(data_folder_path, sc)
     # FIXME
 
-    # FIXME
-    # user_parsed_df = pd.read_csv('cache/user_df.csv')  # parsed from users.json
-    # business_parsed_df = pd.read_csv('cache/business_df.csv')  # parsed from business.json
-    # review_parsed_df = pd.read_csv('cache/review_df.csv')  # parsed from business.json
+    # FIXME Only for local DEBUG Purpose
+    user_parsed_df = pd.read_csv('cache/user_df.csv')  # parsed from users.json
+    business_parsed_df = pd.read_csv('cache/business_df.csv')  # parsed from business.json
+    review_parsed_df = pd.read_csv('cache/review_df.csv')  # parsed from business.json
     # FIXME
 
     print("[1/4] Data loading completed!\n")
@@ -99,43 +114,20 @@ def main(args):
 
     ##############################################################################################################################
     print("------[3/4] Starting Collecting User-Biz Interaction-Level features for Train and Test Data-------\n")
+
     '''# Train data feature processing'''
-    # FIXME
-    train_data_file = f"{data_folder_path}/yelp_combined.csv"
-
-    '''
-    # train_data_file = 'yelp_combined.csv'
-    # merge the two available train dataset
-    # train_data_file1 = f"{data_folder_path}/yelp_train.csv"
-    # train_data_file2 = f"{data_folder_path}/yelp_val.csv"
-    # df1 = pd.read_csv(train_data_file1)
-    # df2 = pd.read_csv(train_data_file2)
-    # merged_pairs_df = pd.concat([df1, df2], ignore_index=True)
-    # merged_pairs_df.to_csv(train_data_file, index=False)
-
-    # FIXME
-    # merged_pairs_df = pd.read_csv('yelp_combined.csv')
-    # FIXME
-    '''
-
-    # FIXME
-    train_df = feature_processor.process_all_features(sc, pd.read_csv(train_data_file), train_data_file)
-    train_df = train_df.merge(user_clusters, on='user_id', how='left')
-    # print(train_df)
-    ####
+    train_data_file = f"{data_folder_path}/yelp_train.csv"
+    print("train_file: ", train_data_file)
+    train_df = process_features(train_data_file, feature_processor, user_clusters)
 
     print("==== Training data User-Biz Interaction-Level features processed.")
-    print(f"Elapsed time: {time.time() - start_time:.2f} seconds\n")
-    # FIXME
-    # exit(1)
     ################################################################################################
     '''# Test data feature processing'''
-    # FIXME comment out if already have val cached rdd files
     print("test_file: ", test_data_file)
-    val_df = feature_processor.process_all_features(sc, pd.read_csv(test_data_file), test_data_file)
-    val_df = val_df.merge(user_clusters, on='user_id', how='left')
+    val_df = process_features(test_data_file, feature_processor, user_clusters)
 
     print("==== Testing data User-Biz Interaction-Level features processed.")
+
     print("[3/4] All Data User-Biz Interaction-Level features processed.")
     print(f"Elapsed time: {time.time() - start_time:.2f} seconds\n")
 
@@ -228,7 +220,7 @@ def main(args):
             train_cluster_data, removed_cols_train = remove_constant_features(
                 train_cluster_data, exclude_columns=['user_id', 'business_id']
             )
-            removed_features[cluster] = removed_cols_train
+            # removed_features[cluster] = removed_cols_train
 
             if train_cluster_data.empty:
                 print(f"Skipping training for cluster {cluster} as it has no training data.")
@@ -248,6 +240,7 @@ def main(args):
             model.fit(X_train, y_train, verbose=False)
             models[cluster] = model
 
+            ############################################################################
             # Preparing validation data
             val_cluster_data = val_df[val_df['Cluster'] == cluster]
             print("val cluster data: ", val_cluster_data.head(5))

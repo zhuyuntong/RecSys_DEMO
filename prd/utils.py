@@ -27,23 +27,14 @@ def create_category_md5_mapping(df):
 
 ### HELPERS
 def __process_bid_tail(cat):
-    """处理business_id, 移除尾部的'_bid'."""
+    """process business_id, remove ['cat'] col's ending w/ '_bid'."""
     if cat.endswith('_bid'):
         return cat[:-4]
     return cat
 
 
-# def __add_user_ids(enhanced_category_md5_df, review_data):
-#     """从review_data中提取user_id, 并与enhanced_category_md5_df合并."""
-#     review_list = [item[0] for item in review_data]  # 提取字典
-#     df_reviews = pd.DataFrame(review_list)
-#     final_df = enhanced_category_md5_df.merge(df_reviews[['user_id', 'business_id']], on='business_id', how='left')
-#     return final_df
-
-
 def __add_user_ids(enhanced_category_md5_df, review_df):
-    """从review_df中提取user_id, 并与enhanced_category_md5_df合并."""
-    # 直接使用DataFrame进行合并，假设review_df已经正确构造
+    """extract user_id from review_df, merge it with enhanced_category_md5_df."""
     final_df = enhanced_category_md5_df.merge(review_df[['user_id', 'business_id']], on='business_id', how='left')
     return final_df
 
@@ -53,13 +44,13 @@ def __add_business_ids(category_md5_df, df_bus_conn):
     merged_df = category_md5_df.merge(
         df_bus_conn[['business_id', 'type']], left_on='category_md5', right_on='type', how='left'
     )
-    merged_df.drop(columns=['type'], inplace=True)  # 删除临时列
+    merged_df.drop(columns=['type'], inplace=True)  # drop temp col
     return merged_df
 
 
 ### HELPERS
 def integrate_mapping_user_bus_cat_data(df_conn, business_df, review_df):
-    """整合所有步骤, 生成最终的DataFrame包含categories、MD5散列、business_id和user_id."""
+    """combine all steps, get a final DataFrame including categories、corresponding MD5 num、business_id and user_id."""
     # Step 1: Generate connection DataFrame with categories and business IDs
     # Step 2: Process business IDs to remove '_bid' tail
     df_conn['business_id'] = df_conn['bid_cat'].apply(__process_bid_tail)
@@ -81,27 +72,8 @@ def integrate_mapping_user_bus_cat_data(df_conn, business_df, review_df):
     return final_mapping_df
 
 
-# def integrate_mapping_user_bus_cat_data(df_conn, category_md5_df, review_data):
-#     """整合所有步骤, 生成最终的DataFrame包含categories、MD5散列、business_id和user_id."""
-#     # Step 1: Generate connection DataFrame with categories and business IDs
-#     # df_conn = feature_processor.df_conn
-
-#     # # Step 2: Process business IDs to remove '_bid' tail
-#     df_conn['business_id'] = df_conn['bid_cat'].apply(__process_bid_tail)
-#     df_conn.drop(columns=['bid_cat'], inplace=True)
-
-#     # Step 3: Merge to add business IDs to category MD5 DataFrame
-#     merged_df = __add_business_ids(category_md5_df, df_conn)
-
-#     # Step 4: Add user IDs using the review data
-#     final_mapping_df = __add_user_ids(merged_df, review_data)
-
-#     # Return the final DataFrame
-#     return final_mapping_df
-
-
 ### DF ==> Dict: {(category, md5 category val) , (biz_id, user_id)}
-## USE EFFICIENT DICT FOR FUTURE SEARCH
+################################ USE EFFICIENT DICT FOR FUTURE SEARCH
 def dataframe_to_rdd_dict(sc, final_mapping_df):
     # 将DataFrame转换为RDD
     data_rdd = sc.parallelize(final_mapping_df.to_dict(orient='records'))
@@ -215,3 +187,29 @@ def analyze_top_categories(result_dict, business_df, dimension, total_user=None,
     result_df = pd.DataFrame(result_data)
 
     return result_df
+
+
+# def integrate_mapping_user_bus_cat_data(df_conn, category_md5_df, review_data):
+#     """整合所有步骤, 生成最终的DataFrame包含categories、MD5散列、business_id和user_id."""
+#     # Step 1: Generate connection DataFrame with categories and business IDs
+#     # df_conn = feature_processor.df_conn
+
+#     # # Step 2: Process business IDs to remove '_bid' tail
+#     df_conn['business_id'] = df_conn['bid_cat'].apply(__process_bid_tail)
+#     df_conn.drop(columns=['bid_cat'], inplace=True)
+
+#     # Step 3: Merge to add business IDs to category MD5 DataFrame
+#     merged_df = __add_business_ids(category_md5_df, df_conn)
+
+#     # Step 4: Add user IDs using the review data
+#     final_mapping_df = __add_user_ids(merged_df, review_data)
+
+#     # Return the final DataFrame
+#     return final_mapping_df
+
+# def __add_user_ids(enhanced_category_md5_df, review_data):
+#     """从review_data中提取user_id, 并与enhanced_category_md5_df合并."""
+#     review_list = [item[0] for item in review_data]  # 提取字典
+#     df_reviews = pd.DataFrame(review_list)
+#     final_df = enhanced_category_md5_df.merge(df_reviews[['user_id', 'business_id']], on='business_id', how='left')
+#     return final_df

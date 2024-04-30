@@ -180,7 +180,7 @@ def predict_aff_score_als(
     # biz_features_rdd,
     user_ids_bcast,
     business_ids_bcast,
-    pair_file_path='../yelp_combined.csv',
+    pair_file_path,
 ):
     ##################################################################
     pair_rdd = (
