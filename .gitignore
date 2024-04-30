@@ -18,3 +18,9 @@ __pycache__/
 
 # Exclude environment variables
 .env
+.DS_Store
+
+# Exclude Data
+data/
+*.csv
+*.json

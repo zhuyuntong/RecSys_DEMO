@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import csv
 import math
+import os
 import json
 import numpy as np
 import pandas as pd
@@ -66,10 +67,6 @@ def main(args):
         sys.exit(1)
 
     data_folder_path, test_data_file, output_file = sys.argv[1], sys.argv[2], sys.argv[3]
-    # FIXME To Test locally without passing Command-Line arguments
-    # data_folder_path, test_data_file, output_file = '../data/', '../yelp_true.csv', 'prediction.csv'
-    # FIXME
-
     print(f"Parsed argv1: {data_folder_path}, argv2: {test_data_file}, argv3: {output_file}\n")
 
     # FIXME
@@ -86,7 +83,6 @@ def main(args):
     # FIXME
 
     # FIXME
-    # comment out if already have cached parsed data files
     # user_parsed_df = pd.read_csv('cache/user_df.csv')  # parsed from users.json
     # business_parsed_df = pd.read_csv('cache/business_df.csv')  # parsed from business.json
     # review_parsed_df = pd.read_csv('cache/review_df.csv')  # parsed from business.json
@@ -97,7 +93,6 @@ def main(args):
 
     feature_processor = FeatureProcessor(sc, data_folder_path, user_parsed_df, business_parsed_df, review_parsed_df)
     user_clusters = KMeans_process_user_clusters(feature_processor.map_reviews_with_categories(), business_parsed_df)
-    # print("FeatureProcessor and Clustering Modules have initialized and processed user, business, review files.")
 
     print("[2/4] Processor init. and Cluster pre-processing completed!")
     print(f"Elapsed time: {time.time() - start_time:.2f} seconds\n")
@@ -106,153 +101,39 @@ def main(args):
     print("------[3/4] Starting Collecting User-Biz Interaction-Level features for Train and Test Data-------\n")
     '''# Train data feature processing'''
     # FIXME
-    train_data_file = 'yelp_combined.csv'
+    train_data_file = f"{data_folder_path}/yelp_combined.csv"
 
-    # # merge two available train dataset
-    train_data_file1 = f"{data_folder_path}/yelp_train.csv"
-    train_data_file2 = f"{data_folder_path}/yelp_val.csv"
-    df1 = pd.read_csv(train_data_file1)
-    df2 = pd.read_csv(train_data_file2)
-    merged_pairs_df = pd.concat([df1, df2], ignore_index=True)
-    merged_pairs_df.to_csv(train_data_file, index=False)
+    '''
+    # train_data_file = 'yelp_combined.csv'
+    # merge the two available train dataset
+    # train_data_file1 = f"{data_folder_path}/yelp_train.csv"
+    # train_data_file2 = f"{data_folder_path}/yelp_val.csv"
+    # df1 = pd.read_csv(train_data_file1)
+    # df2 = pd.read_csv(train_data_file2)
+    # merged_pairs_df = pd.concat([df1, df2], ignore_index=True)
+    # merged_pairs_df.to_csv(train_data_file, index=False)
 
-    # FIXME Comment out if already have cached yelp_combined.csv
+    # FIXME
     # merged_pairs_df = pd.read_csv('yelp_combined.csv')
     # FIXME
-    print(f"Elapsed time: {time.time() - start_time:.2f} seconds\n")
+    '''
 
     # FIXME
-    print("AVOIDING OOM AND CACHED AS TMP FILES")
-    '''
-    spark = (
-        SparkSession.builder.appName("Read Large Data")
-        .config("spark.executor.memory", "6g")
-        .config("spark.driver.memory", "6g")
-        .config("spark.executor.extraJavaOptions", "-XX:+UseG1GC")
-        .config("spark.driver.extraJavaOptions", "-XX:+UseG1GC")
-        .getOrCreate()
-    )
-
-    # BUG
-    # res_rdd = feature_processor.process_all_features(sc, merged_pairs_df, train_data_file)
-    # res_rdd = res_rdd.repartition(10000)
-    # if os.path.exists("train_res_rdd"):
-    # shutil.rmtree("train_res_rdd")
-    # res_rdd.saveAsTextFile("train_res_rdd")
-    # train_df = rdd_to_pandas(res_rdd)
-    # BUG
-    ################################################################################################################################
-
-    def batch_process_and_save(spark, data_path, output_path, batch_size=100000):
-        total_df = spark.read.text(data_path)
-        total_count = total_df.count()
-        num_batches = (total_count // batch_size) + 1
-
-        for i in range(num_batches):
-            batch_df = total_df.limit(batch_size).persist()
-            batch_output_path = f"{output_path}_batch_{i}"
-
-            if os.path.exists(batch_output_path):
-                shutil.rmtree(batch_output_path)  # 安全删除旧目录
-            # batch_df.write.text(batch_output_path)
-            batch_df.write.format("parquet").save(batch_output_path)
-            batch_df.unpersist()  # 清理缓存
-    '''
-
-    # FIXME comment out if already have cached train rdd files
-    print("train_file: ", train_data_file)
-    train_df = feature_processor.process_all_features(sc, merged_pairs_df, train_data_file)
+    train_df = feature_processor.process_all_features(sc, pd.read_csv(train_data_file), train_data_file)
     train_df = train_df.merge(user_clusters, on='user_id', how='left')
-
-    '''
-    # res_rdd = res_rdd.repartition(100000)
-    tmp_train_output_path = "train_res_rdd"
-    if os.path.exists(tmp_train_output_path):
-        shutil.rmtree(tmp_train_output_path)
-    res_rdd.saveAsTextFile(tmp_train_output_path)
-    res_rdd.unpersist()
-    batch_process_and_save(spark, tmp_train_output_path, "tmp/processed_train_data")
-    train_spark_df = spark.read.text("tmp/processed_train_data_batch_*")
-
-    # FIXME
-
-    # BUG
-    # 读取数据并转换为Pandas DataFrame
-    # train_spark_df = spark.read.text("train_res_rdd")
-    # BUG
-    ########################
-    def to_pandas_in_batches(spark_df, batch_size=10000):
-        num_rows = spark_df.count()  # 统计总行数
-        num_batches = (num_rows // batch_size) + 1  # 计算需要分的批次数
-        pandas_df_list = []  # 用于存储每个批次转换成的Pandas DataFrame
-
-        for i in range(num_batches):
-            # 直接转换每个批次为Pandas DataFrame，而不是从原始DataFrame中移除已转换的部分
-            sub_df = spark_df.limit(batch_size).toPandas()
-            pandas_df_list.append(sub_df)
-
-        final_df = pd.concat(pandas_df_list, ignore_index=True)  # 合并所有批次的DataFrame
-        return final_df
-
-    ########################
-    # 检查JSON格式是否正确
-    def correct_and_normalize_json(df):
-        def correct_json(row):
-            corrected = row.replace("'", '"')  # 简单的修正示例
-            try:
-                return json.loads(corrected)
-            except json.JSONDecodeError:
-                print("Failed JSON:", corrected)
-                return {}  # 返回空字典在失败时
-
-        df['corrected_json'] = df['value'].apply(correct_json)
-        return pd.json_normalize(df['corrected_json'])
-
-    # FIXME read in batch to Pandas DF
-    train_spark_df = spark.read.parquet("tmp/processed_train_data_batch_*")
-    train_df = to_pandas_in_batches(train_spark_df, batch_size=10000)
-    train_df = correct_and_normalize_json(train_df)
-    # print(train_df.head())
-    # print("Basic Statistical Details:\n", train_df.describe())
-    # print("Check for Missing Values:\n", train_df.isnull().sum())
-    # print("Data Types:\n", train_df.dtypes)
-    train_df = train_df.merge(user_clusters, on='user_id', how='left')
-    '''
+    # print(train_df)
+    ####
 
     print("==== Training data User-Biz Interaction-Level features processed.")
     print(f"Elapsed time: {time.time() - start_time:.2f} seconds\n")
     # FIXME
-
+    # exit(1)
     ################################################################################################
     '''# Test data feature processing'''
-
+    # FIXME comment out if already have val cached rdd files
     print("test_file: ", test_data_file)
     val_df = feature_processor.process_all_features(sc, pd.read_csv(test_data_file), test_data_file)
     val_df = val_df.merge(user_clusters, on='user_id', how='left')
-
-    '''
-    # FIXME comment out if already have val cached rdd files
-    val_res_rdd = val_res_rdd.repartition(10000)
-    tmp_val_output_path = "val_res_rdd"
-    if os.path.exists(tmp_val_output_path):
-        shutil.rmtree(tmp_val_output_path)
-    val_res_rdd.saveAsTextFile(tmp_val_output_path)
-    val_res_rdd.unpersist()
-    batch_process_and_save(spark, tmp_val_output_path, "tmp/processed_val_data")
-    val_spark_df = spark.read.text("tmp/processed_val_data_batch_*")
-    # FIXME
-
-    # BUG
-    # val_df = val_spark_df.toPandas()  # => Pandas DataFrame
-    # BUG
-
-    # FIXME read in batch to Pandas DF
-    val_spark_df = spark.read.parquet("tmp/processed_val_data_batch_*")
-    val_df = to_pandas_in_batches(val_spark_df, batch_size=10000)
-    val_df = correct_and_normalize_json(val_df)
-    val_df = val_df.merge(user_clusters, on='user_id', how='left')
-    # FIXME
-    '''
 
     print("==== Testing data User-Biz Interaction-Level features processed.")
     print("[3/4] All Data User-Biz Interaction-Level features processed.")
@@ -265,6 +146,7 @@ def main(args):
     moderate_clusters = [7, 6, 8]
     small_clusters = [5, 1]
     clusters = {'large': [0, 2, 4, 3], 'moderate': [7, 6, 8], 'small': [1, 5]}
+    # clusters = {'small': [1, 5]}
     best_params = {
         'large': {
             0: {
@@ -316,7 +198,6 @@ def main(args):
     }
 
     # rmse_scores = {}
-
     print("--------train and test, save predict result-----------")
 
     def prepare_data_for_prediction(df, columns_to_drop, keep_columns=['user_id', 'business_id']):
@@ -335,7 +216,6 @@ def main(args):
         # Drop constant columns
         return df.drop(columns=constant_cols), constant_cols
 
-    # required_columns = ['user_id', 'business_id']
     columns_to_drop = ['stars', 'user_id', 'business_id', 'Cluster']
     all_predictions = pd.DataFrame()
     models = {}

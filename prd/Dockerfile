@@ -63,7 +63,9 @@ RUN pip install imblearn
 RUN pip install community
 RUN pip install python-louvain
 RUN pip install spacy
+RUN pip install scapy
 RUN pip install hyperopt
+RUN pip install bayesian-optimization
 EXPOSE 8889
 WORKDIR /workspace
 
