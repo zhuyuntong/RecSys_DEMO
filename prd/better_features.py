@@ -259,80 +259,25 @@ class FeatureProcessor:
             min_log = np.log(1 + 1)  # Lowest
             return np.exp((normalized_score - 1) / 4 * (max_log - min_log) + min_log) - 1
 
-        final_train_df['affinity_score'] = final_train_df['score'].apply(
-            lambda x: 50 * inverse_log_transform(x) if pd.notnull(x) else 0
+        def log_transform_interaction(interaction_count):
+            """Transform implicit interactions w/ LogTrans, Standardize and map to [1-5]"""
+            return 1 + 4 * (np.log(interaction_count + 1) - np.log(1 + 1)) / (np.log(284 + 1) - np.log(1 + 1))
+            # return 1 + 4 * (np.log(interaction_count + 1) - np.log(0 + 1)) / (np.log(284 + 1) - np.log(0 + 1))
+
+        # TODO################################################
+        final_train_df['log_affinity_score'] = final_train_df['score'].apply(
+            lambda x: 50 * inverse_log_transform(x) if pd.notnull(x) else 0  # FIXME: shall not be 0, be 1 as default
+            # lambda x: 50 * inverse_log_transform(x) if pd.notnull(x) else 50 * inverse_log_transform(1)
+            # lambda x: log_transform_interaction(x) if pd.notnull(x) else 0
         )
 
+        final_train_df['binary_affinity_score'] = final_train_df['score'].apply(
+            lambda x: 1 if pd.notnull(x) and x != 0 else 0
+        )
+        # TODO################################################
         final_train_df.drop(['categories', 'city'], axis=1, errors='ignore', inplace=True)
 
         return final_train_df
-
-        '''
-        # FIXME
-
-        # BUG
-        # 将Pandas DataFrame转换为Spark RDD
-        train_rdd = sc.parallelize(train_df.to_dict('records'))
-        user_rdd = sc.parallelize(self.user_df.to_dict('records'))
-        business_rdd = sc.parallelize(self.business_df.to_dict('records'))
-        # BUG
-
-        # 提取出user_id, business_id作为key, 其他信息作为value的键值对
-        user_info_rdd = user_rdd.map(lambda x: (x['user_id'], x))
-        business_info_rdd = business_rdd.map(lambda x: (x['business_id'], x))
-
-        user_rdd.unpersist()
-        business_rdd.unpersist()
-        # 将train_rdd与user_info_rdd和business_info_rdd信息进行左外合并
-        # 使用leftOuterJoin保证基数不变
-        train_user_rdd = (
-            train_rdd.map(lambda x: (x['user_id'], x))
-            .leftOuterJoin(user_info_rdd)
-            .map(
-                lambda x: (
-                    x[1][0]['business_id'],
-                    {**x[1][0], **(x[1][1] if x[1][1] else {})},
-                )  # Merge user info or add empty if not present
-            )
-        )
-
-        train_rdd.unpersist()
-
-        # 合并business信息，再次使用左外合并
-        final_train_rdd = train_user_rdd.leftOuterJoin(business_info_rdd).map(
-            lambda x: {**x[1][0], **(x[1][1] if x[1][1] else {})}  # Merge business info or add empty if not present
-        )
-
-        user_info_rdd.unpersist()
-        business_info_rdd.unpersist()
-        train_user_rdd.unpersist()
-
-        # 合并final_scores到train_df，使用左外合并
-        def inverse_log_transform(normalized_score):
-            """逆向转换标准化后的评分到原始亲和力分数"""
-            max_log = np.log(284 + 1)  # 284是统计得出的最高的implicit互动次数
-            min_log = np.log(1 + 1)  # 1是最低次数 (tip中都至少互动过一次)
-            return np.exp((normalized_score - 1) / 4 * (max_log - min_log) + min_log) - 1
-
-        final_rdd = (
-            final_train_rdd.map(lambda x: ((x['user_id'], x['business_id']), x))  # FIXME: original: final_train_rdd
-            .leftOuterJoin(scores_kv_rdd)
-            .map(
-                lambda x: {
-                    **x[1][0],
-                    'affinity_score': (
-                        float(50 * inverse_log_transform(x[1][1])) if x[1][1] else 0
-                    ),  # NOTE: FIXME: Test play with x[1][1]
-                }  # Add affinity score or 0 if not present
-            )
-        )
-        final_train_rdd.unpersist()
-        scores_kv_rdd.unpersist()
-
-        final_rdd = final_rdd.map(lambda x: {key: val for key, val in x.items() if key not in ['categories', 'city']})
-
-        return final_rdd
-    '''
 
     # return mapped Past reviews w/ category attached, prepare for KMeans user clustering
     def map_reviews_with_categories(self):
@@ -351,57 +296,3 @@ def inverse_log_transform(normalized_score):
 
 
 ###############################
-'''
-# def md5_hash(s):
-#     hash_val = hashlib.md5(s.encode()).hexdigest()[:32]
-#     return hash_val
-
-
-# def clean_categories(categories):
-#     if categories:
-#         # 替换特殊字符并拆分为单独的类别
-#         return [
-#             cat.strip().lower()
-#             for cat in categories.replace("&", " ")
-#             .replace("/", " ")
-#             .replace("(", "")
-#             .replace(")", "")
-#             .replace("  ", " ")
-#             .split(",")
-#         ]
-#     else:
-#         return []
-
-
-# def hash_categories(business_id, categories):
-#     cleaned_cats = clean_categories(categories)
-#     return [md5_hash(cat) for cat in cleaned_cats]
-
-
-# def process_all_features(self, train_df):
-#     df = train_df.merge(self.user_df, on='user_id', how='left')
-#     df = df.merge(self.business_df, on='business_id', how='left')
-#     df = df.merge(self.review_df, on='business_id', how='left')
-#     # df.drop(columns=['categories', 'city'], inplace=True) # revert categories back if later use NLP
-
-#     # add side info
-#     # train_df_with_features = self.merge_category_features_batch(df)
-#     # return train_df_with_features
-#     return df
-'''
-
-
-## Archived
-## RDD ==> dict
-def ___extract_business_data(business_json):
-    business = json.loads(business_json)
-    return (
-        business['business_id'],
-        {
-            'bus_stars': business['stars'],
-            'bus_review_count': business['review_count'],
-            'categories': business['categories'],
-            'city': business['city'],
-            'is_open': business['is_open'],
-        },
-    )

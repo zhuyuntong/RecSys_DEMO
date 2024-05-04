@@ -77,7 +77,9 @@ def test(sc, data_folder_path, pair_file_path='../yelp_combined.csv', rank=150, 
     return ratings_rdd
 
 
-def decompose_matrix_factorization_als(sc, data_folder_path, rank=51, reg_param=30, alpha=1530.0):  # FIXME:
+# def decompose_matrix_factorization_als(sc, data_folder_path, rank=51, reg_param=30, alpha=1530.0):
+# def decompose_matrix_factorization_als(sc, data_folder_path, rank=35, reg_param=145, alpha=14230):  # FIXME:
+def decompose_matrix_factorization_als(sc, data_folder_path, rank=120, reg_param=0.000412, alpha=2140.0):  # FIXME:
     # Helper function to parse JSON data
     def parse_json(line):
         try:
@@ -170,6 +172,27 @@ def decompose_matrix_factorization_als(sc, data_folder_path, rank=51, reg_param=
     )
 
 
+#######################
+def calculate_affinity_for_batch(batch, user_features_bcast, biz_features_bcast, default_score=1.0):  # tune this # FIXME:
+    """Calculate Batched user-business pair's affinity score, batch contains (user_num, biz_num), use default ratings for user/business not found in tip.json"""
+    results = []
+    for user_num, biz_num in batch:
+        if user_num == -1 or biz_num == -1:
+            # 对于无效的数值ID，使用默认得分
+            results.append(((user_num, biz_num), default_score))
+        else:
+            user_features = user_features_bcast.value.get(user_num)
+            biz_features = biz_features_bcast.value.get(biz_num)
+            if user_features is not None and biz_features is not None:
+                score = np.dot(user_features, biz_features)
+                results.append(((user_num, biz_num), score))
+            else:
+                # 如果找不到特征向量，也使用默认得分
+                results.append(((user_num, biz_num), default_score))
+    return results
+
+
+# FIXME:
 def predict_aff_score_als(
     sc,
     user_features_bcast,
@@ -181,6 +204,7 @@ def predict_aff_score_als(
     user_ids_bcast,
     business_ids_bcast,
     pair_file_path,
+    default_score=0.0,
 ):
     ##################################################################
     pair_rdd = (
@@ -202,7 +226,7 @@ def predict_aff_score_als(
     tracked_pairs_rdd = pair_rdd.map(lambda line: map_and_track_ids(line, user_ids_bcast, business_ids_bcast))
     valid_pairs_rdd = tracked_pairs_rdd.filter(lambda x: x[0][0] != -1 and x[0][1] != -1).cache()
     missing_pairs_rdd = tracked_pairs_rdd.filter(lambda x: x[0][0] == -1 or x[0][1] == -1).map(
-        lambda x: (x[1], 1.0)
+        lambda x: (x[1], default_score)
     )  # FIXME:  # tune this
 
     pair_rdd.unpersist()
@@ -346,26 +370,6 @@ def map_ids_back(pair_score, reverse_user_ids_bcast, reverse_business_ids_bcast)
     user_id = reverse_user_ids_bcast.value.get(user_num, "Unknown")
     biz_id = reverse_business_ids_bcast.value.get(biz_num, "Unknown")
     return ((user_id, biz_id), score)
-
-
-#######################
-def calculate_affinity_for_batch(batch, user_features_bcast, biz_features_bcast, default_score=1.0):  # tune this # FIXME
-    """Calculate Batched user-business pair's affinity score, batch contains (user_num, biz_num), use default ratings for user/business not found in tip.json"""
-    results = []
-    for user_num, biz_num in batch:
-        if user_num == -1 or biz_num == -1:
-            # 对于无效的数值ID，使用默认得分
-            results.append(((user_num, biz_num), default_score))
-        else:
-            user_features = user_features_bcast.value.get(user_num)
-            biz_features = biz_features_bcast.value.get(biz_num)
-            if user_features is not None and biz_features is not None:
-                score = np.dot(user_features, biz_features)
-                results.append(((user_num, biz_num), score))
-            else:
-                # 如果找不到特征向量，也使用默认得分
-                results.append(((user_num, biz_num), default_score))
-    return results
 
 
 # def calculate_batch_affinity_scores(batch, user_features_bcast, biz_features_bcast):

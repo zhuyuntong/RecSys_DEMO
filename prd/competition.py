@@ -27,6 +27,13 @@ from better_features import (
     read_json_data,
 )
 from KMeans_user_cluster import KMeans_process_user_clusters
+import numpy as np
+import pandas as pd
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from catboost import CatBoostRegressor
+from xgboost import XGBRegressor
+from sklearn.linear_model import ElasticNet, ElasticNetCV
 
 
 def initialize_spark_context():
@@ -134,145 +141,187 @@ def main(args):
     ################################################################################################################################
     '''# MODEL TRAINING and VALIDATION PROCESS START'''
     print("------ [4/4] Starting Splitting Clusters and Training Models on 9 K-Means Clusters-------\n")
-    large_clusters = [0, 2, 4, 3]
-    moderate_clusters = [7, 6, 8]
-    small_clusters = [5, 1]
-    clusters = {'large': [0, 2, 4, 3], 'moderate': [7, 6, 8], 'small': [1, 5]}
-    # clusters = {'small': [1, 5]}
-    best_params = {
-        'large': {
-            0: {
-                'colsample_bytree': 0.58,
-                'gamma': 0.34,
-                'learning_rate': 0.033,
-                'max_depth': 9,
-                'max_leaves': 119,
-                'n_estimators': 482,
-                'subsample': 0.9,
-            },
-            2: {
-                'colsample_bytree': 0.58,
-                'gamma': 0.4,
-                'learning_rate': 0.029,
-                'max_depth': 7,
-                'max_leaves': 126,
-                'n_estimators': 450,
-                'subsample': 0.918,
-            },
-            4: {
-                'colsample_bytree': 0.58,
-                'gamma': 0.4,
-                'learning_rate': 0.029,
-                'max_depth': 7,
-                'max_leaves': 118,
-                'n_estimators': 450,
-                'subsample': 0.93,
-            },
-            3: {
-                'colsample_bytree': 0.61,
-                'gamma': 0.4,
-                'learning_rate': 0.029,
-                'max_depth': 7,
-                'max_leaves': 122,
-                'n_estimators': 450,
-                'subsample': 0.93,
-            },
-        },
-        'moderate': {
-            7: {'depth': 10, 'l2_leaf_reg': 1, 'learning_rate': 0.2, 'n_estimators': 634},
-            6: {'depth': 9, 'l2_leaf_reg': 7, 'learning_rate': 0.187, 'n_estimators': 631},
-            8: {'depth': 6, 'l2_leaf_reg': 8, 'learning_rate': 0.178, 'n_estimators': 638},
-        },
-        'small': {
-            1: {'depth': 9, 'l2_leaf_reg': 1, 'learning_rate': 0.165, 'n_estimators': 705},
-            5: {'depth': 10, 'l2_leaf_reg': 1, 'learning_rate': 0.2, 'n_estimators': 549},
-        },
+    # 0,2 no splitting val,
+    # 3,4 using only catboost
+    # test_size = 0.05
+    large_xgb_params = {
+        0: {'learning_rate': 0.04246778091879101, 'max_depth': 6, 'n_estimators': 491, 'subsample': 0.8689},
+        2: {'learning_rate': 0.12350751460907078, 'max_depth': 3, 'n_estimators': 288, 'subsample': 0.8880},
+        3: {'learning_rate': 0.08288064461501718, 'max_depth': 5, 'n_estimators': 305, 'subsample': 0.6839},
+        4: {'learning_rate': 0.18299396047960448, 'max_depth': 4, 'n_estimators': 250, 'subsample': 0.9081},
     }
 
+    large_catboost_params = {
+        0: {'depth': 12, 'l2_leaf_reg': 18.15, 'learning_rate': 0.06229, 'n_estimators': 1486},
+        2: {'depth': 6, 'l2_leaf_reg': 28.02, 'learning_rate': 0.1090, 'n_estimators': 176},
+        3: {'depth': 5, 'l2_leaf_reg': 0.2358, 'learning_rate': 0.1968, 'n_estimators': 62},
+        4: {'depth': 4, 'l2_leaf_reg': 0.3376, 'learning_rate': 0.1914, 'n_estimators': 46},
+    }
+
+    # 5, 6, 7, 8
+    # test_size = 0.1
+    medium_catboost_params = {
+        5: {'depth': 3, 'l2_leaf_reg': 0.415375550656062, 'learning_rate': 0.9017553809036529},
+        7: {'depth': 6, 'l2_leaf_reg': 18.3792029910461, 'learning_rate': 0.9372003134293689},
+        8: {'depth': 1, 'l2_leaf_reg': 7.440376345058953, 'learning_rate': 0.4049807340854126},
+        6: {'depth': 2, 'l2_leaf_reg': 1.1835517768726047, 'learning_rate': 0.38770112704134657},
+    }
     # rmse_scores = {}
     print("--------train and test, save predict result-----------")
 
-    def prepare_data_for_prediction(df, columns_to_drop, keep_columns=['user_id', 'business_id']):
-        if any(col not in df.columns for col in keep_columns):
-            print(f"Missing one of the required columns: {keep_columns} in the DataFrame.")
-            return None, None
+    def find_best_weight(cluster, X_train, y_train, X_test, y_test):
+        # init
+        cb_model = CatBoostRegressor(**large_catboost_params[cluster], verbose=False)
+        xgb_model = XGBRegressor(**large_xgb_params[cluster], objective='reg:squarederror', verbosity=0)
 
-        kept_data = df[keep_columns] if keep_columns else df
-        df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
+        # train
+        cb_model.fit(X_train, y_train)
+        xgb_model.fit(X_train, y_train)
 
-        return df, kept_data
+        # predict
+        cb_preds = cb_model.predict(X_test).clip(1, 5)
+        xgb_preds = xgb_model.predict(X_test).clip(1, 5)
 
-    def remove_constant_features(df, exclude_columns=['user_id', 'business_id']):
-        # Identify constant features excluding specified columns
-        constant_cols = [col for col in df.columns if df[col].nunique() == 1 and col not in exclude_columns]
-        # Drop constant columns
-        return df.drop(columns=constant_cols), constant_cols
+        best_rmse = float('inf')
+        best_ratio = 0
 
-    columns_to_drop = ['stars', 'user_id', 'business_id', 'Cluster']
-    all_predictions = pd.DataFrame()
-    models = {}
-    removed_features = {}
+        for ratio in np.linspace(0, 1, 21):  # test different porpotion
+            final_preds = ratio * cb_preds + (1 - ratio) * xgb_preds
+            rmse = np.sqrt(mean_squared_error(y_test, final_preds))
+            if rmse < best_rmse:
+                best_rmse = rmse
+                best_ratio = ratio
 
-    for size in clusters:
-        for cluster in clusters[size]:
-            # Preparing training data
-            train_cluster_data = train_df[train_df['Cluster'] == cluster]
-            train_cluster_data, removed_cols_train = remove_constant_features(
-                train_cluster_data, exclude_columns=['user_id', 'business_id']
+        return best_ratio, best_rmse
+
+    def find_best_weight(cluster, X_train, y_train, X_test, y_test):
+        # init
+        cb_model = CatBoostRegressor(**large_catboost_params[cluster], verbose=False)
+        xgb_model = XGBRegressor(**large_xgb_params[cluster], objective='reg:squarederror', verbosity=0)
+
+        # train
+        cb_model.fit(X_train, y_train)
+        xgb_model.fit(X_train, y_train)
+
+        # predict
+        cb_preds = cb_model.predict(X_test).clip(1, 5)
+        xgb_preds = xgb_model.predict(X_test).clip(1, 5)
+
+        best_rmse = float('inf')
+        best_ratio = 0
+
+        for ratio in np.linspace(0, 1, 21):  # test different porpotion
+            final_preds = ratio * cb_preds + (1 - ratio) * xgb_preds
+            rmse = np.sqrt(mean_squared_error(y_test, final_preds))
+            if rmse < best_rmse:
+                best_rmse = rmse
+                best_ratio = ratio
+
+        return best_ratio, best_rmse
+
+    def train_model(cluster, train_df, test_df):
+        def prepare_data(df, cluster, drop_cols):
+            if cluster == -1:
+                cluster_data = df
+            else:
+                cluster_data = df[df['Cluster'] == cluster]
+
+            drop_cols = [col for col in drop_cols if col in cluster_data.columns]
+            X = cluster_data.drop(columns=drop_cols, errors='ignore')
+            y = cluster_data['stars']
+            return X, y
+
+        if cluster in [5]:
+            drop_cols = ['stars', 'user_id', 'business_id', 'log_affinity_score']  # For cluster 5, do not drop 'score'
+        elif cluster in [6, 7, 8]:
+            drop_cols = [
+                'stars',
+                'user_id',
+                'business_id',
+                'binary_affinity_score',
+                'log_affinity_score',
+            ]  # Drop both 'score' and 'log_affinity_score'
+        else:
+            drop_cols = ['stars', 'user_id', 'business_id']  # Default columns to drop
+
+        if cluster in [0, 2]:
+            X_train, y_train = prepare_data(train_df, cluster, drop_cols)
+            X_test, y_test = prepare_data(test_df, cluster, drop_cols)
+
+            cb_model = CatBoostRegressor(**large_catboost_params[cluster], verbose=False)
+            xgb_model = XGBRegressor(**large_xgb_params[cluster], objective='reg:squarederror', verbosity=0)
+
+            cb_model.fit(X_train, y_train)
+            xgb_model.fit(X_train, y_train)
+
+            cb_preds = cb_model.predict(X_test)
+            xgb_preds = xgb_model.predict(X_test)
+
+            # Applying best weight ratio and clipping
+            #  if cluster == 0 else (0.65 * cb_preds + 0.35 * xgb_preds)
+            best_ratio, best_rmse = find_best_weight(cluster, X_train, y_train, X_test, y_test)
+            final_preds = best_ratio * cb_preds + (1 - best_ratio) * xgb_preds
+            final_preds = np.clip(final_preds, 1, 5)
+
+        elif cluster in [1]:
+            if pd.isnull(train_df['score']).any() or pd.isnull(test_df['score']).any():
+                drop_cols.append('score')
+
+            X_train, y_train = prepare_data(train_df, cluster, drop_cols)
+            X_test, y_test = prepare_data(test_df, cluster, drop_cols)
+
+            # model = ElasticNet(**small_ES_params[cluster])
+            model = ElasticNetCV(
+                l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], alphas=np.logspace(-6, 2, 100), cv=5, random_state=42
             )
-            # removed_features[cluster] = removed_cols_train
+            model.fit(X_train, y_train)
+            final_preds = model.predict(X_test).clip(1, 5)
 
-            if train_cluster_data.empty:
-                print(f"Skipping training for cluster {cluster} as it has no training data.")
-                continue
+        elif cluster in [3]:
+            test_size = 0.25
+            X_train, y_train = prepare_data(train_df, cluster, drop_cols)
+            X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=test_size, random_state=42)
+            X_test, y_test = prepare_data(test_df, cluster, drop_cols)
+            model = CatBoostRegressor(**large_catboost_params[cluster], verbose=False)
+            model.fit(X_train, y_train, eval_set=(X_val, y_val), early_stopping_rounds=30)
+            final_preds = model.predict(X_test).clip(1, 5)
 
-            # # train data prep
-            X_train, _ = prepare_data_for_prediction(train_cluster_data, columns_to_drop)
-            y_train = train_cluster_data['stars']
+        elif cluster in [4, 5, 6, 7, 8]:
+            test_size = 0.1
+            X_train, y_train = prepare_data(test_df, cluster, drop_cols)
+            X_test, y_test = prepare_data(test_df, cluster, drop_cols)
+            X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=test_size, random_state=42)
 
-            if y_train.empty:
-                print(f"Skipping cluster {cluster} due to empty labels in training set.")
-                continue
-
-            # Train models
-            params = best_params[size][cluster]
-            model = xgb.XGBRegressor(**params, verbosity=0) if size == 'large' else CatBoostRegressor(**params, verbose=0)
-            model.fit(X_train, y_train, verbose=False)
-            models[cluster] = model
-
-            ############################################################################
-            # Preparing validation data
-            val_cluster_data = val_df[val_df['Cluster'] == cluster]
-            print("val cluster data: ", val_cluster_data.head(5))
-
-            val_cluster_data, _ = remove_constant_features(val_cluster_data)
-
-            if val_cluster_data.empty:
-                print(f"Skipping validation for cluster {cluster} as it has no validation data.")
-                continue
-
-            X_val, kept_data = prepare_data_for_prediction(val_cluster_data, columns_to_drop)
-
-            if set(X_train.columns) != set(X_val.columns):
-                print(f"Feature mismatch in cluster {cluster}, skipping predictions.")
-                continue
-
-            # Retrieving training parameters
-            predictions = models[cluster].predict(X_val)
-            result_df = pd.DataFrame(
-                {
-                    'user_id': kept_data['user_id'],
-                    'business_id': kept_data['business_id'],
-                    'prediction': predictions,
-                }
+            model = CatBoostRegressor(
+                **(large_catboost_params[cluster] if cluster in [3, 4] else medium_catboost_params[cluster]), verbose=False
             )
+            model.fit(X_train, y_train, eval_set=(X_test, y_test), early_stopping_rounds=10)
+            final_preds = model.predict(X_test).clip(1, 5)
 
-            all_predictions = pd.concat([all_predictions, result_df], ignore_index=True)
+        # merge a prediction df
+        id_and_stars = test_df[test_df['Cluster'] == cluster][['user_id', 'business_id', 'stars']]
+        predictions_df = pd.DataFrame(final_preds, index=id_and_stars.index, columns=['predicted_stars'])
+        results_df = pd.concat([id_and_stars, predictions_df], axis=1)
+
+        rmse = np.sqrt(mean_squared_error(y_test, final_preds))
+        # rmse = np.sqrt(mean_squared_error(results_df['stars'], results_df['predicted_stars']))
+        return results_df, rmse
+
+    clusters_rmse = {}
+    all_results = pd.DataFrame()
+
+    for cluster in range(9):
+        # for cluster in [0, 2, 1, 3, 4, 5, 6, 7, 8]:
+        result_df, rmse = train_model(cluster, train_df, val_df)
+        clusters_rmse[cluster] = rmse
+        all_results = pd.concat([all_results, result_df])
+
+    print("RMSE from each cluster:", clusters_rmse)
 
     # final sanity check
-    all_predictions['prediction'] = all_predictions['prediction'].astype(float)
-    all_predictions['prediction'] = all_predictions['prediction'].clip(lower=1, upper=5)
-    all_predictions.to_csv(output_file, columns=['user_id', 'business_id', 'prediction'], index=False)
+    all_results['prediction'] = all_results['prediction'].astype(float)
+    all_results['prediction'] = all_results['prediction'].clip(lower=1, upper=5)
+    all_results.to_csv(output_file, columns=['user_id', 'business_id', 'prediction'], index=False)
     print(f"Predictions have been saved to {output_file}.")
     return
 
