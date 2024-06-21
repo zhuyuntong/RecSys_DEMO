@@ -34,7 +34,7 @@ Terms:
 
 ### MF.py Description
 
-This script implements ALS (Alternating Least Squares) for matrix factorization to derive feature vectors for users and businesses based on implicit interactions from tips.json. Additionally, it includes a logarithmic transformation to standardize raw interaction counts into a more normalized rating scale (from 1 to 5).
+This script implements ALS (Alternating Least Squares) for matrix factorization to derive feature vectors for users and businesses based on implicit interactions from `tips.json`. Additionally, it includes a logarithmic transformation to standardize raw interaction counts into a more normalized rating scale (from 1 to 5).
 
 #### Key Components:
 
