@@ -25,7 +25,7 @@ Terms:
 - Models: ALS Matrix Factorization approach, K-means, XGBRegressor, (Graph Node2Vec, Universal Sentence Encoder)
 - Packages/framework: SparkRDD, spark.ml, (gensim, spacy, tensorflow, ... )
 - Scaling: K-means Clusters identifying localized user-business groups
-- Fine-Tunig: Bayesian Optimization Search
+- Fine-Tuning: Bayesian Optimization Search
 - Evaluation Metric: RMSE
 
 # 1. Matrix Factorization with ALS and leveraging Block Matrix Calculation using RDD
