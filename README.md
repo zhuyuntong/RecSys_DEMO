@@ -1,3 +1,25 @@
+# Update Note:
+- 2024/07/28: 
+The new document `TODO_EN.md` introduces a ranking-focused mixed recommendation system that utilizes multimodal data (text and images) to generate embeddings and employs XGBoost's LambdaMART for ranking optimization. Current version is a regressive model, and the new version will be a ranking model. `README.md` explains the previous version, and `TODO_EN.md` explains the new version. Here is a snapshot of the new version:
+
+
+>   ## Project Goals
+>   The project aims to implement a **ranking-focused** mixed recommendation system that utilizes multimodal data (text and images) to generate embeddings and employs XGBoost's LambdaMART for ranking optimization. The main goal of the system is to enhance recommendation accuracy, especially in cold-start user scenarios and visually-driven business contexts.
+
+>   ## Main Technology Stack
+>   - **Python, Spark**: For data processing and model training
+>   - **XGBoost (LambdaMART)**: For ranking optimization
+>   - **Universal Sentence Encoder (USE)**: For generating text embeddings
+>   - **CLIP**: For generating image embeddings
+>   - **ALS (Alternating Least Squares)**: For implicit matrix factorization
+>   ## System Architecture
+>   ### Ranking Optimization Goal
+>   Switch the existing regression target to a ranking optimization target, using **XGBoost**'s **LambdaMART** to implement a ranking-based recommendation system.
+>    - **Evaluation Metrics**: Use **NDCG** and **MAP** as the main evaluation ? metrics, replacing the original RMSE (Root Mean Square Error).
+>    - **Grouped Processing**: Define a group of businesses for each user and ensure optimal sorting of business results generated for the same user during training.
+
+---
+
 # Personal Project DEMO
 
 Regressive hybrid Recommendation Model: An offline, scalable, supervised recommendation model for user-to-business ratings 
@@ -25,7 +47,7 @@ Terms:
 - Models: ALS Matrix Factorization approach, K-means, XGBRegressor, (Graph Node2Vec, Universal Sentence Encoder)
 - Packages/framework: SparkRDD, spark.ml, (gensim, spacy, tensorflow, ... )
 - Scaling: K-means Clusters identifying localized user-business groups
-- Fine-Tuning: Bayesian Optimization Search
+- Fine-Tuning: Bayesian Optimization Search (hyperopt version for spark-based)
 - Evaluation Metric: RMSE
 
 # 1. Matrix Factorization with ALS and leveraging Block Matrix Calculation using RDD
