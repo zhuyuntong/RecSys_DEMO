@@ -138,8 +138,3 @@ print(f"NDCG Score: {ndcg}")
 - **Multimodal Feature Integration**: Combined text and image embeddings of businesses to create a more robust multimodal recommendation system, enhancing user engagement.
 
 ---
-
-## Reflection Directions
-1. **Q1**: Is there a need to further optimize the personalized matching logic between users and businesses?
-2. **Q2**: Are there other data modalities (e.g., audio or geographical location) that can further enrich the recommendation system?
-3. **Q3**: Is there a plan to fine-tune and enhance image classification or image-text matching tasks?
