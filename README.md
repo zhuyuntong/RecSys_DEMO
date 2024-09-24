@@ -131,10 +131,13 @@ Others:
 > 
 > Assess how accurately the model recognizes images related to home services. CLIP offers the possibility to remove the restraint of needing a large number of examples for each category the model infers. A review of the possible output classes from CLIP will lead to more diversified content tags on Yelp.
 >
-> Graph 4: A more complete overview of text-based cosine similarity of Yelp's review embeddings
+> Graph 4: (BERT) A more complete overview of text-based cosine similarity of Yelp's review embeddings
 > ![image](https://github.com/user-attachments/assets/a2d32350-e5c2-4809-9b6c-eca0ef47b71c)
-> 
 > Similar to Graph 1.
+> 
+> Graph 5: (USE) A more complete overview of text-based cosine similarity of Yelp's review embeddings
+> ![image](https://github.com/user-attachments/assets/44c262ce-660b-417e-84ea-c28c76c39531)
+> 
 
 
 ## 2024/07/28
