@@ -1,8 +1,8 @@
 # Update Note:
 ## Timeline
-- [2024/08-09](##2024/08-09)
-- [2024/07](#2024/07/28)
-- [2024/03-05](#PersonalProjectDEMO)
+- [2024/08-09](##202408-09)
+- [2024/07](#20240728)
+- [2024/03-05](#personal-project-demo)
 ## 2024/08-09
 ### Progress
 Implemented notebook `multimodalRanking.ipynb`, covers several aspects mentioned in the `TODO_EN.md`.
