@@ -90,17 +90,17 @@ import clip
 from PIL import Image
 import numpy as np
 
-# 加载CLIP模型
+# load CLIP model
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model, preprocess = clip.load("ViT-B/32", device=device)
-# 加载并处理图片
+# load and process image
 image = preprocess(Image.open("path_to_yelp_image.jpg")).unsqueeze(0).to(device)
 
-# 获取图像嵌入
+# get image embedding
 with torch.no_grad():
     image_embedding = model.encode_image(image).cpu().numpy()
 
-# 整合文本和图片嵌入
+# integrate text and image embedding
 combined_embedding = np.concatenate([text_embedding, image_embedding], axis=1)
 ```
 

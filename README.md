@@ -15,7 +15,7 @@ The new document `TODO_EN.md` introduces a ranking-focused mixed recommendation 
 >   ## System Architecture
 >   ### Ranking Optimization Goal
 >   Switch the existing regression target to a ranking optimization target, using **XGBoost**'s **LambdaMART** to implement a ranking-based recommendation system.
->    - **Evaluation Metrics**: Use **NDCG** and **MAP** as the main evaluation ? metrics, replacing the original RMSE (Root Mean Square Error).
+>    - **Evaluation Metrics**: Use **NDCG** and **MAP** as the main evaluation metrics, replacing the original RMSE (Root Mean Square Error).
 >    - **Grouped Processing**: Define a group of businesses for each user and ensure optimal sorting of business results generated for the same user during training.
 
 ---
