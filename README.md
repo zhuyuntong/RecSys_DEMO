@@ -4,7 +4,7 @@
 - [2024/07: Design of Migrating to Multimodal Top-K Personalized Ranking Recommendation](#20240728)
 - [2024/03-05: Legacy Score Prediction Hybrid Model](#personal-project-demo)
 ## 2024/08-09
-### Progress: AUC 0.6% with 20K data
+### Progress: AUC 0.6 with 20K data
 Implemented notebook `multimodalRanking.ipynb`, covers several aspects mentioned in the `TODO_EN.md`.
 Showcased the usage of multimodal methods (such as BERT/USE/CLIP) to handle various data sources and use these features for downstream tasks like rank-based recommendations and classification.
 
