@@ -1,8 +1,8 @@
 # Update Note:
 ## Timeline
-- [2024/08-09](##202408-09)
-- [2024/07](#20240728)
-- [2024/03-05](#personal-project-demo)
+- [2024/08-09: Implementation of Multimodal embeddings and Two-Tower Model](##202408-09)
+- [2024/07: Design of Migrating to Multimodal Top-K Personalized Ranking Recommendation](#20240728)
+- [2024/03-05: Legacy Score Prediction Hybrid Model](#personal-project-demo)
 ## 2024/08-09
 ### Progress
 Implemented notebook `multimodalRanking.ipynb`, covers several aspects mentioned in the `TODO_EN.md`.
