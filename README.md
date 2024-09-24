@@ -1,5 +1,9 @@
 # Update Note:
-## 2024.08 & 09:
+## Timeline
+- [2024/08-09](##2024/08-09)
+- [2024/07](#2024/07/28)
+- [2024/03-05](#PersonalProjectDEMO)
+## 2024/08-09
 ### Progress
 Implemented notebook `multimodalRanking.ipynb`, covers several aspects mentioned in the `TODO_EN.md`.
 Showcased the usage of multimodal methods (such as BERT/USE/CLIP) to handle various data sources and use these features for downstream tasks like rank-based recommendations and classification.
@@ -129,7 +133,7 @@ Others:
 > Similar to Graph 1.
 
 
-## 2024/07/28: 
+## 2024/07/28
 The new document `TODO_EN.md` introduces a ranking-focused mixed recommendation system that utilizes multimodal data (text and images) to generate embeddings and employs XGBoost's LambdaMART for ranking optimization. Current version is a regressive model, and the new version will be a ranking model. `README.md` explains the previous version, and `TODO_EN.md` explains the new version. Here is a snapshot of the new version:
 
 
