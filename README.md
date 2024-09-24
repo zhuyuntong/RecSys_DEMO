@@ -36,7 +36,7 @@ In the `forward` method of the `TwoTowerModel`, user and business features are f
 The review and image embeddings are fed into the recommendation model through a multi-step process of extraction, feature combination, and dataset construction. These embeddings, along with other user and business features, serve as input features for model training and inference.
 
 ### Overview of the notebook process
-### 1. **Data Preparation Module**
+#### 1. **Data Preparation Module**
 - **Function**: Load and preprocess data to provide foundational input for model training and recommendations.
 - **Relevant Code Blocks**: 
   - in[0]: Imports and Device Setup
@@ -44,44 +44,44 @@ The review and image embeddings are fed into the recommendation model through a 
   - in[2]: Feature Scaling and Category Processing
   - in[3]: Business Feature Extraction
 
-### 2. **Embedding Extraction Module**
+#### 2. **Embedding Extraction Module**
 - **Function**: Extract embeddings from reviews and images, using BERT for text and CLIP for image data processing.
 - **Relevant Code Blocks**: 
   - in[2]: BERT Text Embedding
   - in[14]: Image Embedding Extraction
   - in[17]: Text Embedding Extraction
 
-### 3. **Model Definition Module**
+#### 3. **Model Definition Module**
 - **Function**: Define the structure of the recommendation model, including user and business towers, and implement the contrastive loss function.
 - **Relevant Code Blocks**: 
   - in[5]: Model Definition
   - in[6]: Contrastive Loss Function
 
-### 4. **Training and Evaluation Module**
+#### 4. **Training and Evaluation Module**
 - **Function**: Train the recommendation model and evaluate its performance using metrics like loss, NDCG, and MAP.
 - **Relevant Code Blocks**: 
   - in[4]: Distance Calculation (Dataset Creation)
   - in[7]: Training Function
   - in[8]: Evaluation Function
 
-### 5. **Ranking and Recommendation Module**
+#### 5. **Ranking and Recommendation Module**
 - **Function**: Generate business recommendations for users based on the trained model and rank them.
 - **Relevant Code Blocks**: 
   - in[10]: Recommendation Function
   - in[13]: Business Recommendations
 
-### 6. **Similarity Analysis Module**
+#### 6. **Similarity Analysis Module**
 - **Function**: Analyze the similarity between reviews and businesses to improve recommendation quality.
 - **Relevant Code Blocks**: 
   - in[14]: Similarity Heatmap
   - in[19]: Text Similarity Heatmap
 
-### 7. **Visualization Module**
+#### 7. **Visualization Module**
 - **Function**: Visualize user features, recommendation results, and similarity analysis to better understand model performance.
 - **Relevant Code Blocks**: 
   - in[11]: User Feature Visualization
 
-### 8. **Image Classification Module**
+#### 8. **Image Classification Module**
 - **Function**: Process image data, extract image embeddings, train classification models, and plot confusion matrices to support the recommendation system.
 - **Relevant Code Blocks**: 
   - in[15]: Image Classification
