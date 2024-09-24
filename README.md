@@ -113,6 +113,7 @@ Others:
 > ## Visualization
 > Graph1: Cosine Similarity Heatmap of Review Embeddings across various categories applied on a sample of Yelp Review data
 > ![image](https://github.com/user-attachments/assets/d2bcb6b9-cf1c-4d79-bab6-2ca484cb959c)
+> 
 > This plot showcases the **cosine similarity** between review embeddings from various categories. By computing the similarities between these embeddings and visualizing them as a heatmap, we can observe the following:
 > - **Same-category reviews**: Reviews within the same category tend to be closer to each other in vector space, reflected by brighter areas in the heatmap.
 > - **Different-category reviews**: Reviews from different categories are relatively farther apart in vector space, shown as darker areas in the heatmap.
@@ -120,16 +121,19 @@ Others:
 > 
 > Graph 2: CLIP Photo Cliassification Precision Table
 > ![image](https://github.com/user-attachments/assets/1e61aea0-dd89-443b-86fb-64cace99017d)
+> 
 > **Content**: This plot is a **confusion matrix**. It shows the precision with which the CLIP model predicted the hand-labeled Yelp dataset. More importantly, it shows which categories get mixed up together
 > - **X-axis**: Represents the predicted labels by the model.
 > - **Y-axis**: Represents the true labels.
 > 
 > Graph 3: Home Services Contractor Classifier ('Inside' and 'Outside')
 > ![image](https://github.com/user-attachments/assets/29b4262e-95f9-4ee4-aad6-4409404218e2)
+> 
 > Assess how accurately the model recognizes images related to home services. CLIP offers the possibility to remove the restraint of needing a large number of examples for each category the model infers. A review of the possible output classes from CLIP will lead to more diversified content tags on Yelp.
 >
 > Graph 4: A more complete overview of text-based cosine similarity of Yelp's review embeddings
 > ![image](https://github.com/user-attachments/assets/a2d32350-e5c2-4809-9b6c-eca0ef47b71c)
+> 
 > Similar to Graph 1.
 
 
